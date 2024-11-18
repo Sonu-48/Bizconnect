@@ -1,16 +1,36 @@
-import {useNavigation} from '@react-navigation/native';
-import {
-  Image,
-  ImageBackground,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Image, ImageBackground, ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles/Styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
+
+  // Logout function to handle both Email and Google login
+  const logouthandle = async () => {
+    try {
+      const loginMethod = await AsyncStorage.getItem('loginMethod');  // Check how the user logged in
+
+      if (loginMethod === 'google') {
+        // Sign out from Google if user logged in via Google
+        await GoogleSignin.signOut();
+        console.log('User signed out from Google');
+      }
+      
+      // Clear AsyncStorage (removes email, token, password, role, etc.)
+      await AsyncStorage.clear();
+      console.log('User logged out');
+
+      // Navigate to Login screen
+      navigation.navigate('Login');
+    } catch (error) {
+      console.log('Logout error', error);
+      Alert.alert('Logout Error', 'Something went wrong while logging out.');
+    }
+  };
+
   return (
     <>
       <ImageBackground
@@ -22,53 +42,88 @@ const ProfileScreen = () => {
           borderBottomLeftRadius: 10,
           borderBottomRightRadius: 10,
           height: 400,
-        }}>
+        }}
+      >
         <View style={styles.container}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <MaterialIcons name="arrow-back-ios-new" size={25} color="#ffff" />
           </TouchableOpacity>
-          <View style={{alignItems: 'center'}}>
+          <View style={{ alignItems: 'center' }}>
             <Text style={styles.h3}>Profile</Text>
             <Image
               source={require('../assets/user2.png')}
-              style={{width: 120, height: 120, marginTop: 30, marginBottom: 10}}
+              style={{ width: 120, height: 120, marginTop: 30, marginBottom: 10 }}
             />
             <Text style={styles.h3}>Nick Jones</Text>
           </View>
         </View>
       </ImageBackground>
-      <View style={styles.container}>
-       <View style={{marginTop:40}}>
-       <TouchableOpacity style={{flexDirection:'row',justifyContent:'space-between',paddingTop:10,paddingBottom:10,alignItems:'center'}}>
-          <View style={{alignItems:'center',flexDirection:'row'}}>
-            <Image source={require('../assets/settings.png')}/>
-            <Text style={[styles.h3,{color:'#000000',marginLeft:10}]}>Settings</Text>
+
+      {/* Settings and logout section */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <View style={{ marginTop: 40 }}>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                paddingTop: 10,
+                paddingBottom: 10,
+                alignItems: 'center',
+              }}
+            >
+              <View style={{ alignItems: 'center', flexDirection: 'row' }}>
+                <Image source={require('../assets/settings.png')} />
+                <Text style={[styles.h3, { color: '#000000', marginLeft: 10 }]}>
+                  Settings
+                </Text>
+              </View>
+              <View>
+                <MaterialIcons name="arrow-forward-ios" size={30} color="#000000" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                paddingTop: 10,
+                paddingBottom: 10,
+                alignItems: 'center',
+                marginTop: 20,
+              }}
+            >
+              <View style={{ alignItems: 'center', flexDirection: 'row' }}>
+                <Image source={require('../assets/support.png')} />
+                <Text style={[styles.h3, { color: '#000000', marginLeft: 10 }]}>
+                  Support
+                </Text>
+              </View>
+              <View>
+                <MaterialIcons name="arrow-forward-ios" size={30} color="#000000" />
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                paddingTop: 10,
+                paddingBottom: 20,
+                alignItems: 'center',
+                marginTop: 20,
+              }}
+              onPress={logouthandle}  // Call the logout function here
+            >
+              <View style={{ alignItems: 'center', flexDirection: 'row' }}>
+                <Image source={require('../assets/logout.png')} />
+                <Text style={[styles.h3, { color: '#000000', marginLeft: 10 }]}>
+                  Log Out
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
-          <View>
-          <MaterialIcons name="arrow-forward-ios" size={30} color="#000000" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={{flexDirection:'row',justifyContent:'space-between',paddingTop:10,paddingBottom:10,alignItems:'center',marginTop:20}}>
-          <View style={{alignItems:'center',flexDirection:'row'}}>
-            <Image source={require('../assets/support.png')}/>
-            <Text style={[styles.h3,{color:'#000000',marginLeft:10}]}>Support</Text>
-          </View>
-          <View>
-          <MaterialIcons name="arrow-forward-ios" size={30} color="#000000" />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={{flexDirection:'row',justifyContent:'space-between',paddingTop:10,paddingBottom:10,alignItems:'center',marginTop:20}}>
-          <View style={{alignItems:'center',flexDirection:'row'}}>
-            <Image source={require('../assets/up-down.png')}/>
-            <Text style={[styles.h3,{color:'#000000',marginLeft:10}]}>Feedback</Text>
-          </View>
-          <View>
-          <MaterialIcons name="arrow-forward-ios" size={30} color="#000000" />
-          </View>
-        </TouchableOpacity>
-       </View>
-      </View>
+        </View>
+      </ScrollView>
     </>
   );
 };
+
 export default ProfileScreen;
