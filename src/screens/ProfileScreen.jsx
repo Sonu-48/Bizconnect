@@ -1,12 +1,20 @@
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Image, ImageBackground, ScrollView, Text, TouchableOpacity, View, Alert } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles/Styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import axios from 'axios';
+import { Base_url } from '../ApiUrl'; // Replace with your correct base URL
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
+
+  const [profileImage, setProfileImage] = useState(null);
+  const [profilePic,setProfilePic]= useState(null);
 
   // Logout function to handle both Email and Google login
   const logouthandle = async () => {
@@ -16,15 +24,15 @@ const ProfileScreen = () => {
         'Are you sure you want to log out?',
         [
           {
-            text: 'Cancel', 
-            style: 'cancel'
+            text: 'Cancel',
+            style: 'cancel',
           },
           {
             text: 'OK',
             onPress: async () => {
               try {
                 const loginMethod = await AsyncStorage.getItem('loginMethod');
-                console.log("loginMethod",loginMethod);
+                console.log("loginMethod", loginMethod);
 
                 if (loginMethod === 'google') {
                   await GoogleSignin.signOut();
@@ -48,6 +56,89 @@ const ProfileScreen = () => {
     }
   };
 
+  // Handle editing the profile image
+  const handleEditProfileImage = () => {
+    Alert.alert(
+      "Select Profile Picture",
+      "Choose an option",
+      [
+        {
+          text: "Camera",
+          onPress: () => launchCamera({}, (response) => {
+            if (response.assets && response.assets.length > 0) {
+              setProfilePic(response.assets[0]);
+              uploadProfileImage(response.assets[0]);
+            }
+          }),
+        },
+        {
+          text: "Gallery",
+          onPress: () => launchImageLibrary({}, (response) => {
+            if (response.assets && response.assets.length > 0) {
+              setProfilePic(response.assets[0]);
+              uploadProfileImage(response.assets[0]);
+            }
+          }),
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  // Upload the profile image to the backend
+  const uploadProfileImage = async (image) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Error', 'User is not authenticated.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('photo', {
+        uri: image.uri,
+        type: image.type,
+        name: image.fileName,
+      });
+
+      // Send the image to the backend
+      const response = await axios({
+        method: 'post',
+        url: Base_url.profilepic, // Replace with your actual backend API endpoint
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // If the upload is successful, update the profile image state
+      if (response.data.success) {
+        // Assuming the backend returns a filename or partial URL (e.g. 'photo_673c8b78eb9d5.PNG')
+        const imageUrl = response.data.data; // Replace with actual response data
+
+        // If the backend returns a relative URL, prepend the full base URL
+        const fullImageUrl = imageUrl.startsWith('http')
+          ? imageUrl // if it's already a complete URL
+          : `https://bizconnect.a1professionals.net/storage/uploads/profile_pic/${imageUrl}`;
+
+        // Update the profile image state with the full URL
+        setProfileImage({ uri: fullImageUrl });
+
+        Alert.alert('Success', 'Profile image updated successfully');
+      } else {
+        Alert.alert('Error', 'Failed to upload your photo.');
+      }
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      Alert.alert('Error', 'An error occurred while uploading the photo.');
+    }
+  };
+
   return (
     <>
       <ImageBackground
@@ -67,11 +158,16 @@ const ProfileScreen = () => {
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
             <Text style={styles.h3}>Profile</Text>
-            <Image
-              source={require('../assets/user2.png')}
-              style={{ width: 120, height: 120, marginTop: 30, marginBottom: 10 }}
-            />
-            <Text style={styles.h3}>Nick Jones</Text>
+            <View style={{ position: 'relative' }}>
+              <Image
+                source={profileImage ? { uri: profilePic.uri } : require('../assets/user2.png')}
+                style={{ width: 120, height: 120, marginTop: 30, marginBottom: 10, borderRadius: 20 }}
+              />
+              <TouchableOpacity style={styles.editIcon} onPress={handleEditProfileImage}>
+                <Icon name="camera" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.h3}>Shanu Jones</Text>
           </View>
         </View>
       </ImageBackground>
@@ -88,6 +184,7 @@ const ProfileScreen = () => {
                 paddingBottom: 10,
                 alignItems: 'center',
               }}
+              onPress={() => navigation.navigate('Setting')}
             >
               <View style={{ alignItems: 'center', flexDirection: 'row' }}>
                 <Image source={require('../assets/settings.png')} />

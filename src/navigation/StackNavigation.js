@@ -11,6 +11,8 @@ import ChatInbox from "../screens/ChatInbox";
 import VideoCallScreen from "../screens/VideoCallScreen";
 import OtpScreen from "../OtpScreen";
 import Reviews from "../screens/Reviews";
+import Settings from "../screens/Settings";
+import ProfileScreen from "../screens/ProfileScreen";
 
 
 const Stack = createNativeStackNavigator();
@@ -29,6 +31,8 @@ const StackNavigation=()=>{
             <Stack.Screen name="Review" component={Reviews} options={{headerShown:false}}/>
             <Stack.Screen name="VideoCallScreen" component={VideoCallScreen} options={{headerShown:false}}/>
             <Stack.Screen name="OtpScreen" component={OtpScreen} options={{headerShown:false}}/>
+            <Stack.Screen name="Setting" component={Settings} options={{headerShown:false}}/>
+            <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{headerShown:false}}/>
         </Stack.Navigator>
     );
 }

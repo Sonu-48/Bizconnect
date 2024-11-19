@@ -6,4 +6,6 @@ export const Base_url = {
     otplogin:`${base_url}auth/verify/otp/login`,
     addreviews:`${base_url}add/reviews`,
     getreviews:`${base_url}get/reviews`,
+    updateProfile:`${base_url}users/update/profile`,
+    profilepic:`${base_url}users/upload/profilepic`
 }

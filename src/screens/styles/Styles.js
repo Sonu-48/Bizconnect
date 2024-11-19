@@ -56,6 +56,14 @@ const styles = StyleSheet.create({
     width: 233,
     height: 62,
   },
+  editIcon: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#0A387E',
+    padding: 6,
+    borderRadius: 50,
+  },
   // btn1: {
   //   fontWeight: '500',
   //   paddingTop: 15,
@@ -348,5 +356,10 @@ otpBox: {
   borderColor:'#ffff',
   color:'#ffff'
 },
+icon:{
+  width:50,
+  height:50
+}
+
 });
 export default styles;

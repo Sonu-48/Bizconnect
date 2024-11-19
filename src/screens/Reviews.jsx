@@ -1,23 +1,60 @@
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import {FlatList, Image, Text, TouchableOpacity, View} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles/Styles';
-import { useNavigation } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
-import PendingReviews from './PendingReviews';
-import CompletedReviews from './CompletedReviews';
+import {useNavigation} from '@react-navigation/native';
+import {useEffect, useState} from 'react';
 import axios from 'axios';
-import { Base_url } from '../ApiUrl';
+import {Base_url} from '../ApiUrl';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const renderReviews = ({item}) => {
+  return (
+    <>
+      <View style={styles.reviewwrappper}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+          <Text style={styles.h4}>{item.business_name}</Text>
+          <View style={{flexDirection: 'row'}}>
+            <Text style={{color: '#F34343', fontSize: 15}}>Invoice No:</Text>
+            <Text style={{fontSize: 16, color: '#00008B'}}>
+              {item.invoice_number}
+            </Text>
+          </View>
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+          <Text>{item.date}</Text>
+          <View style={{flexDirection: 'row'}}>
+            <Text style={{color: '#F34343', fontSize: 15}}>Order No:</Text>
+            <Text style={{fontSize: 16, color: '#00008B'}}>
+              {item.order_number}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.reviewtext}>{item.description}</Text>
+      </View>
+    </>
+  );
+};
 
 const Reviews = () => {
   const navigation = useNavigation();
-  const [selectTab, setSelectTab] = useState('Completed Review');
+  // const [selectTab, setSelectTab] = useState('Completed Review');
   const [token, setToken] = useState(null);
+  const [reviews, setReviews] = useState([]);
 
   // handleTab function
-  const handleTab = (tab) => {
-    setSelectTab(tab);
-  };
+  // const handleTab = (tab) => {
+  //   setSelectTab(tab);
+  // };
 
   // get Reviews Api
   const getReviews = async () => {
@@ -41,21 +78,31 @@ const Reviews = () => {
 
       if (res.data.success === true) {
         console.log(res.data.message);
+        setReviews(res.data.data);
       } else {
         Alert.alert('Error', 'Unable to fetch reviews.');
       }
     } catch (error) {
       if (error.response) {
         if (error.response.status === 403) {
-          Alert.alert('Access Denied', 'You do not have permission to view reviews.');
+          Alert.alert(
+            'Access Denied',
+            'You do not have permission to view reviews.',
+          );
           await AsyncStorage.clear();
           navigation.navigate('Login');
         } else {
-          Alert.alert('Error', error.response.data.message || 'An error occurred.');
+          Alert.alert(
+            'Error',
+            error.response.data.message || 'An error occurred.',
+          );
         }
       } else {
         console.error('Network or Request Error:', error);
-        Alert.alert('Error', 'An error occurred while fetching reviews. Please check your internet connection.');
+        Alert.alert(
+          'Error',
+          'An error occurred while fetching reviews. Please check your internet connection.',
+        );
       }
     }
   };
@@ -67,7 +114,7 @@ const Reviews = () => {
   return (
     <>
       {/* Header Section */}
-      <View style={[styles.headersection, { paddingTop: 20, paddingBottom: 20 }]}>
+      <View style={[styles.headersection, {paddingTop: 20, paddingBottom: 20}]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={{
@@ -81,10 +128,10 @@ const Reviews = () => {
         </TouchableOpacity>
         <Text style={styles.h3}>Reviews</Text>
       </View>
-      
+
       <View style={styles.container}>
-        <View style={{ alignItems: 'center', marginTop: 40 }}>
-          <Text style={[styles.h3, { color: '#000', fontWeight: '700' }]}>
+        <View style={{alignItems: 'center', marginTop: 40}}>
+          <Text style={[styles.h3, {color: '#000', fontWeight: '700'}]}>
             Write a Review
           </Text>
           <View
@@ -104,9 +151,9 @@ const Reviews = () => {
               <Image source={require('../assets/yahoo-icon.png')} />
             </TouchableOpacity>
           </View>
-          
+
           {/* Tab Navigation */}
-          <View
+          {/* <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
@@ -158,13 +205,13 @@ const Reviews = () => {
                 Pending Review
               </Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
         </View>
-        
-        {/* Conditional Rendering of Components */}
-        {selectTab === 'Completed Review' && <CompletedReviews />}
-        {selectTab === 'Pending Review' && <PendingReviews />}
-        
+        <FlatList
+          data={reviews}
+          renderItem={renderReviews}
+          // keyExtractor={item => item.id.toString()}
+        />
       </View>
 
       {/* Add Review Button */}
