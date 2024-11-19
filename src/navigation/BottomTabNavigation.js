@@ -6,7 +6,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import ChatInbox from '../screens/ChatInbox';
 import FontAwesome6 from 'react-native-vector-icons/FontAwesome6';
 import ProfileScreen from '../screens/ProfileScreen';
-import Review from '../screens/Review';
+import Reviews from '../screens/Reviews';
 import {View} from 'react-native';
 
 const Tab = createBottomTabNavigator();
@@ -77,7 +77,7 @@ const BottomTabNavigation = () => {
       />
       <Tab.Screen
         name="Review"
-        component={Review}
+        component={Reviews}
         options={{headerShown: false}}
       />
       <Tab.Screen

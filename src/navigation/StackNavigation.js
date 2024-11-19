@@ -10,6 +10,7 @@ import AddReviews from "../screens/AddReviews";
 import ChatInbox from "../screens/ChatInbox";
 import VideoCallScreen from "../screens/VideoCallScreen";
 import OtpScreen from "../OtpScreen";
+import Reviews from "../screens/Reviews";
 
 
 const Stack = createNativeStackNavigator();
@@ -25,7 +26,7 @@ const StackNavigation=()=>{
             <Stack.Screen name="Invoices" component={Invoices} options={{headerShown:false}}/>
             <Stack.Screen name="AddInvoices" component={AddInvoices} options={{headerShown:false}}/>
             <Stack.Screen name="AddReviews" component={AddReviews} options={{headerShown:false}}/>
-            <Stack.Screen name="Review" component={AddReviews} options={{headerShown:false}}/>
+            <Stack.Screen name="Review" component={Reviews} options={{headerShown:false}}/>
             <Stack.Screen name="VideoCallScreen" component={VideoCallScreen} options={{headerShown:false}}/>
             <Stack.Screen name="OtpScreen" component={OtpScreen} options={{headerShown:false}}/>
         </Stack.Navigator>

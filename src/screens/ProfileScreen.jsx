@@ -11,20 +11,37 @@ const ProfileScreen = () => {
   // Logout function to handle both Email and Google login
   const logouthandle = async () => {
     try {
-      const loginMethod = await AsyncStorage.getItem('loginMethod');  // Check how the user logged in
+      Alert.alert(
+        'Confirm Logout',
+        'Are you sure you want to log out?',
+        [
+          {
+            text: 'Cancel', 
+            style: 'cancel'
+          },
+          {
+            text: 'OK',
+            onPress: async () => {
+              try {
+                const loginMethod = await AsyncStorage.getItem('loginMethod');
+                console.log("loginMethod",loginMethod);
 
-      if (loginMethod === 'google') {
-        // Sign out from Google if user logged in via Google
-        await GoogleSignin.signOut();
-        console.log('User signed out from Google');
-      }
-      
-      // Clear AsyncStorage (removes email, token, password, role, etc.)
-      await AsyncStorage.clear();
-      console.log('User logged out');
-
-      // Navigate to Login screen
-      navigation.navigate('Login');
+                if (loginMethod === 'google') {
+                  await GoogleSignin.signOut();
+                  console.log('User signed out from Google');
+                }
+                await AsyncStorage.clear();
+                console.log('User logged out');
+                navigation.navigate('Login');
+              } catch (error) {
+                console.log('Logout error', error);
+                Alert.alert('Logout Error', 'Something went wrong while logging out.');
+              }
+            }
+          }
+        ],
+        { cancelable: false }
+      );
     } catch (error) {
       console.log('Logout error', error);
       Alert.alert('Logout Error', 'Something went wrong while logging out.');
@@ -110,7 +127,7 @@ const ProfileScreen = () => {
                 alignItems: 'center',
                 marginTop: 20,
               }}
-              onPress={logouthandle}  // Call the logout function here
+              onPress={logouthandle}
             >
               <View style={{ alignItems: 'center', flexDirection: 'row' }}>
                 <Image source={require('../assets/logout.png')} />

@@ -345,7 +345,8 @@ otpBox: {
   textAlign: 'center',
   fontSize: 24,
   margin: 5,
-  borderColor:'#ffff'
+  borderColor:'#ffff',
+  color:'#ffff'
 },
 });
 export default styles;

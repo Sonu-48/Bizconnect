@@ -2,18 +2,67 @@ import { Image, Text, TouchableOpacity, View } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles/Styles';
 import { useNavigation } from '@react-navigation/native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PendingReviews from './PendingReviews';
 import CompletedReviews from './CompletedReviews';
+import axios from 'axios';
+import { Base_url } from '../ApiUrl';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Review = () => {
+const Reviews = () => {
   const navigation = useNavigation();
   const [selectTab, setSelectTab] = useState('Completed Review');
+  const [token, setToken] = useState(null);
 
   // handleTab function
-  const handleTab = tab => {
+  const handleTab = (tab) => {
     setSelectTab(tab);
   };
+
+  // get Reviews Api
+  const getReviews = async () => {
+    const token = await AsyncStorage.getItem('token');
+    setToken(token);
+    console.log('Token:', token);
+    if (!token) {
+      Alert.alert('Error', 'User is not logged in or token is missing.');
+      return;
+    }
+
+    try {
+      const res = await axios({
+        method: 'get',
+        url: Base_url.getreviews,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + token,
+        },
+      });
+
+      if (res.data.success === true) {
+        console.log(res.data.message);
+      } else {
+        Alert.alert('Error', 'Unable to fetch reviews.');
+      }
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status === 403) {
+          Alert.alert('Access Denied', 'You do not have permission to view reviews.');
+          await AsyncStorage.clear();
+          navigation.navigate('Login');
+        } else {
+          Alert.alert('Error', error.response.data.message || 'An error occurred.');
+        }
+      } else {
+        console.error('Network or Request Error:', error);
+        Alert.alert('Error', 'An error occurred while fetching reviews. Please check your internet connection.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    getReviews();
+  }, [token]);
 
   return (
     <>
@@ -34,7 +83,6 @@ const Review = () => {
       </View>
       
       <View style={styles.container}>
-        {/* Reviews Section */}
         <View style={{ alignItems: 'center', marginTop: 40 }}>
           <Text style={[styles.h3, { color: '#000', fontWeight: '700' }]}>
             Write a Review
@@ -141,4 +189,4 @@ const Review = () => {
   );
 };
 
-export default Review;
+export default Reviews;

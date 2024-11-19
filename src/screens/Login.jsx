@@ -38,7 +38,6 @@ const Login = () => {
   const handleSubmit = async (values, { resetForm }) => {
     try {
       setLoading(true);
-
       const res = await axios({
         method: 'post',
         url: Base_url.login,
@@ -47,8 +46,6 @@ const Login = () => {
           password: values.password,
         },
       });
-
-      // Clear the form fields after submission
       resetForm();
 
       await AsyncStorage.setItem('email', values.email);
@@ -56,20 +53,16 @@ const Login = () => {
       if (res.data.success === true) {
         const token = res.data.data.token;
         const screen = res.data.screen;
-        console.log('Screen from response:', screen);
+       if(token){
+        await AsyncStorage.setItem('token', token);
+       }
 
         // If "Remember Me" is checked, store the credentials or token
         if (isChecked) {
           await AsyncStorage.setItem('token', token);
           await AsyncStorage.setItem('email', values.email);
           await AsyncStorage.setItem('password', values.password);
-        } else {
-          // If not checked, remove credentials from AsyncStorage
-          await AsyncStorage.removeItem('token');
-          await AsyncStorage.removeItem('role');
-          await AsyncStorage.removeItem('password');
-        }
-
+        } 
         Alert.alert(res.data.message);
 
         // Navigate based on the screen value from API response
@@ -80,30 +73,39 @@ const Login = () => {
         } else {
           Alert.alert('Error', 'Invalid screen value.');
         }
-      }
-      else if(res.data.success=== false){
-        Alert.alert(res.data.message);
-      }
-        else {
+      } else {
         Alert.alert('Invalid credentials');
       }
     } catch (error) {
       Alert.alert('Error', 'An error occurred during login.');
       console.log(error);
     } finally {
-      setLoading(false); // Hide loading indicator after API call completes
+      setLoading(false);
     }
   };
+
+  // Check if token is already available in AsyncStorage on initial load
+  useEffect(() => {
+    const checkToken = async () => {
+      const storedToken = await AsyncStorage.getItem('token');
+      if (storedToken) {
+        // Token exists, navigate to Home
+        navigation.navigate('Home');
+      }
+    };
+    checkToken();
+  }, [navigation]);
 
   useEffect(() => {
     GoogleSignin.configure({
         webClientId: "811814618197-6q4jdsds0cjpi6gs5nj8ofl3oavo1jdr.apps.googleusercontent.com"
     });
-}, []);
+  }, []);
+
   // login with googleSignin
   const signIn = async () => {
+    await AsyncStorage.setItem('loginMethod', 'google');
     try {
-      // Check for Google Play Services availability
       await GoogleSignin.hasPlayServices();
   
       // Attempt to sign in
@@ -131,40 +133,6 @@ const Login = () => {
       }
     }
   };
-
-
-
-// const signIn = async () => {
-//     try {
-//         await GoogleSignin.hasPlayServices();
-//         const usrInfo = await GoogleSignin.signIn();
-
-//         console.log('User Info:', usrInfo);
-
-        
-//         dispatch(setUser({
-//             id: usrInfo?.data?.user?.id,
-//             email: usrInfo?.data?.user?.email,
-//             name: usrInfo?.data?.user?.name,
-//             photo: usrInfo?.data?.user?.photo
-//         }));
-
-       
-//         navigation.navigate('BottomTab');
-//     } catch (error) {
-//         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-//             Alert.alert('Login cancelled', 'User cancelled the Google login process');
-//         } else if (error.code === statusCodes.IN_PROGRESS) {
-//             Alert.alert('Login in progress', 'Google login is already in progress');
-//         } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-//             Alert.alert('Error', 'Play services are not available on this device');
-//         } else {
-//             Alert.alert('Error', error.message);
-//         }
-//     }
-// };
-  
-
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }} style={{ padding: 0, margin: 0 }}>
       <ImageBackground
