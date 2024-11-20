@@ -3,6 +3,7 @@ export const base_url= ' https://bizconnect.a1professionals.net/api/v1/'
 export const Base_url = {
 
     login:`${base_url}auth/login/otp`,
+    sociallogin:`${base_url}auth/sociallogin`,
     otplogin:`${base_url}auth/verify/otp/login`,
     addreviews:`${base_url}add/reviews`,
     getreviews:`${base_url}get/reviews`,

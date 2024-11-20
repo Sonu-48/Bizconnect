@@ -1,19 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator, ImageBackground, Image } from 'react-native';
-import { Formik } from 'formik';
+import React, {useState, useEffect} from 'react';
+import {
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+  ActivityIndicator,
+  ImageBackground,
+  Image,
+} from 'react-native';
+import {Formik} from 'formik';
 import * as yup from 'yup';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import CheckBox from '@react-native-community/checkbox';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
-import { Base_url } from '../ApiUrl';
+import {Base_url} from '../ApiUrl';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import styles from './styles/Styles';
 import {
   GoogleSignin,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-
 
 const validationSchema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Email is required'),
@@ -27,15 +36,15 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [userInfo,setUserInfo]= useState(null)
+  const [userInfo, setUserInfo] = useState(null);
   const navigation = useNavigation();
 
   const toggleCheckbox = () => {
     setIsChecked(!isChecked);
   };
 
-  // Handle form submission
-  const handleSubmit = async (values, { resetForm }) => {
+  // Handle Login with email and password
+  const handleSubmit = async (values, {resetForm}) => {
     try {
       setLoading(true);
       const res = await axios({
@@ -53,22 +62,22 @@ const Login = () => {
       if (res.data.success === true) {
         const token = res.data.data.token;
         const screen = res.data.screen;
-       if(token){
-        await AsyncStorage.setItem('token', token);
-       }
+        if (token) {
+          await AsyncStorage.setItem('token', token);
+        }
 
         // If "Remember Me" is checked, store the credentials or token
         if (isChecked) {
           await AsyncStorage.setItem('token', token);
           await AsyncStorage.setItem('email', values.email);
           await AsyncStorage.setItem('password', values.password);
-        } 
+        }
         Alert.alert(res.data.message);
 
         // Navigate based on the screen value from API response
-        if (screen === "login") {
+        if (screen === 'login') {
           navigation.navigate('Home');
-        } else if (screen === "otp") {
+        } else if (screen === 'otp') {
           navigation.navigate('OtpScreen');
         } else {
           Alert.alert('Error', 'Invalid screen value.');
@@ -84,7 +93,6 @@ const Login = () => {
     }
   };
 
-  // Check if token is already available in AsyncStorage on initial load
   useEffect(() => {
     const checkToken = async () => {
       const storedToken = await AsyncStorage.getItem('token');
@@ -98,7 +106,8 @@ const Login = () => {
 
   useEffect(() => {
     GoogleSignin.configure({
-        webClientId: "811814618197-6q4jdsds0cjpi6gs5nj8ofl3oavo1jdr.apps.googleusercontent.com"
+      webClientId:
+        '811814618197-6q4jdsds0cjpi6gs5nj8ofl3oavo1jdr.apps.googleusercontent.com',
     });
   }, []);
 
@@ -107,47 +116,102 @@ const Login = () => {
     await AsyncStorage.setItem('loginMethod', 'google');
     try {
       await GoogleSignin.hasPlayServices();
-  
-      // Attempt to sign in
       const userInfo = await GoogleSignin.signIn();
-  
-      // Update the state with the user info
       setUserInfo(userInfo);
-  
-      console.log('User Info:', userInfo);
-  
-      // You can also navigate or handle what to do after the user is signed in
-      navigation.navigate('Home');
+      if (userInfo) {
+        const email = userInfo.data.user.email;
+        const provider_name = 'google';
+        const provider_id = userInfo.data.user.id;
+        console.log('id', userInfo.data.user.id);
+        sociallogin(email, provider_name, provider_id);
+        // console.log('email', userInfo.data.user.email);
+        // console.log('User Info:', userInfo);
+        navigation.navigate('Home');
+      }
     } catch (error) {
       console.error('Google Sign-In Error:', error);
-      // Handle specific errors
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        Alert.alert('Sign-In Cancelled', 'You have cancelled the sign-in process');
+        Alert.alert(
+          'Sign-In Cancelled',
+          'You have cancelled the sign-in process',
+        );
       } else if (error.code === statusCodes.IN_PROGRESS) {
         Alert.alert('Sign-In In Progress', 'Sign-In is already in progress');
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert('Play Services Error', 'Google Play services are not available or outdated');
+        Alert.alert(
+          'Play Services Error',
+          'Google Play services are not available or outdated',
+        );
       } else {
         // Other errors
-        Alert.alert('Error', error.message || 'Something went wrong during sign-in');
+        Alert.alert(
+          'Error',
+          error.message || 'Something went wrong during sign-in',
+        );
       }
     }
   };
+
+  const sociallogin = async (email, provider_name, provider_id) => {
+    try {
+      const res = await axios({
+        method: 'POST',
+        url: Base_url.sociallogin,
+        data: {
+          provider_name: provider_name,
+          email: email,
+          provider_id: provider_id,
+        },
+      });
+
+      if (res.data.success === true) {
+        const token = res.data.data.token;
+        console.log('token', token);
+        if (token) {
+          await AsyncStorage.setItem('token', token);
+        }
+        Alert.alert("Login Successfully");
+        console.log('Social Login Response:', res.data);
+      } else {
+        Alert.alert('Error', 'Something went wrong with social login.');
+      }
+    } catch (error) {
+      console.error('Social login error:', error);
+
+      if (error.response) {
+        console.log('Error response from server:', error.response.data);
+        Alert.alert(
+          'Error',
+          `Server error: ${error.response.data.message || 'Unknown error'}`,
+        );
+      } else if (error.request) {
+        console.log('Error request:', error.request);
+        Alert.alert(
+          'Error',
+          'No response from the server. Please check your network.',
+        );
+      } else {
+        console.log('General error:', error.message);
+        Alert.alert('Error', `An error occurred: ${error.message}`);
+      }
+    }
+  };
+
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }} style={{ padding: 0, margin: 0 }}>
+    <ScrollView
+      contentContainerStyle={{flexGrow: 1}}
+      style={{padding: 0, margin: 0}}>
       <ImageBackground
         source={require('../assets/background.png')}
         resizeMode="cover"
-        style={{ flex: 1, width: '100%', height: '100%' }}
-      >
+        style={{flex: 1, width: '100%', height: '100%'}}>
         <Formik
           initialValues={{
-            email: '', 
+            email: '',
             password: '',
           }}
           validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-        >
+          onSubmit={handleSubmit}>
           {({
             handleChange,
             handleBlur,
@@ -158,12 +222,23 @@ const Login = () => {
             resetForm,
           }) => (
             <View style={styles.container}>
-              <View style={{ alignItems: 'center', marginTop: 20 }}>
+              <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                <Image
+                  source={require('../assets/logo.png')}
+                  style={{width: 250, height: 100, resizeMode: 'cover'}}
+                />
+              </View>
+              <View style={{alignItems: 'center', marginTop: 20}}>
                 <Text style={styles.h1}>Login</Text>
               </View>
-              <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                <View style={[styles.textfield_wrapper, { marginTop: 30 }]}>
-                  <Text style={[styles.text, { paddingLeft: 8, fontSize: 15 }]}>
+              <View
+                style={{
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 1,
+                }}>
+                <View style={[styles.textfield_wrapper, {marginTop: 30}]}>
+                  <Text style={[styles.text, {paddingLeft: 8, fontSize: 15}]}>
                     Email
                   </Text>
                   <TextInput
@@ -179,46 +254,64 @@ const Login = () => {
                   )}
                 </View>
                 <View style={styles.textfield_wrapper}>
-                  <Text style={[styles.text, { paddingLeft: 8, fontSize: 15 }]}>
+                  <Text style={[styles.text, {paddingLeft: 8, fontSize: 15}]}>
                     Password
                   </Text>
-                  <View style={[styles.textfield, { flexDirection: 'row', alignItems: 'center' }]}>
+                  <View
+                    style={[
+                      styles.textfield,
+                      {flexDirection: 'row', alignItems: 'center'},
+                    ]}>
                     <TextInput
                       placeholder="Password"
                       secureTextEntry={!showPassword}
                       placeholderTextColor="#000"
-                      style={[styles.textfield, { flex: 1, borderWidth: 0, paddingLeft: 0, marginTop: 0 }]}
+                      style={[
+                        styles.textfield,
+                        {flex: 1, borderWidth: 0, paddingLeft: 0, marginTop: 0},
+                      ]}
                       onChangeText={handleChange('password')}
                       onBlur={handleBlur('password')}
                       value={values.password}
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
-                      style={{ marginRight: 10 }}
-                    >
-                      <Icon name={showPassword ? 'visibility' : 'visibility-off'} size={30} />
+                      style={{marginRight: 10}}>
+                      <Icon
+                        name={showPassword ? 'visibility' : 'visibility-off'}
+                        size={30}
+                      />
                     </TouchableOpacity>
                   </View>
                   {touched.password && errors.password && (
                     <Text style={styles.errortext}>{errors.password}</Text>
                   )}
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    width: '100%',
+                  }}>
+                  <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <CheckBox
                       value={isChecked}
                       onValueChange={toggleCheckbox}
-                      style={{ marginRight: 8 }}
-                      tintColors={{ true: 'green', false: '#ffff' }}
+                      style={{marginRight: 8}}
+                      tintColors={{true: 'green', false: '#ffff'}}
                     />
-                    <Text style={[styles.text, { marginTop: 0 }]}>
+                    <Text style={[styles.text, {marginTop: 0}]}>
                       Remember Me
                     </Text>
                   </View>
                 </View>
 
-                <View style={{ alignItems: 'center', marginTop: 60 }}>
-                  <TouchableOpacity style={styles.btn} onPress={handleSubmit} disabled={loading}>
+                <View style={{alignItems: 'center', marginTop: 60}}>
+                  <TouchableOpacity
+                    style={styles.btn}
+                    onPress={handleSubmit}
+                    disabled={loading}>
                     {loading ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
@@ -227,12 +320,12 @@ const Login = () => {
                   </TouchableOpacity>
                 </View>
 
-                <View style={{ marginTop: 20 }}>
-                  <Text style={[styles.h3, { textAlign: 'center' }]}>or</Text>
+                <View style={{marginTop: 20}}>
+                  <Text style={[styles.h3, {textAlign: 'center'}]}>or</Text>
                   <TouchableOpacity style={styles.btnview2} onPress={signIn}>
                     <Image
                       source={require('../assets/google.png')}
-                      style={{ height: 40, width: 40, resizeMode: 'contain' }}
+                      style={{height: 40, width: 40, resizeMode: 'contain'}}
                     />
                     <Text
                       style={{
@@ -241,17 +334,10 @@ const Login = () => {
                         fontWeight: 'regular',
                         fontSize: 18,
                         marginRight: 40,
-                      }}
-                    >
+                      }}>
                       Continue with Google
                     </Text>
                   </TouchableOpacity>
-                </View>
-                <View>
-                  <Image
-                    source={require('../assets/logo.png')}
-                    style={{ width: 250, height: 100, resizeMode: 'cover' }}
-                  />
                 </View>
               </View>
             </View>

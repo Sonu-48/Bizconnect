@@ -108,25 +108,18 @@ const ProfileScreen = () => {
       // Send the image to the backend
       const response = await axios({
         method: 'post',
-        url: Base_url.profilepic, // Replace with your actual backend API endpoint
+        url: Base_url.profilepic,
         data: formData,
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
         },
       });
-
-      // If the upload is successful, update the profile image state
       if (response.data.success) {
-        // Assuming the backend returns a filename or partial URL (e.g. 'photo_673c8b78eb9d5.PNG')
-        const imageUrl = response.data.data; // Replace with actual response data
-
-        // If the backend returns a relative URL, prepend the full base URL
+        const imageUrl = response.data.data;
         const fullImageUrl = imageUrl.startsWith('http')
-          ? imageUrl // if it's already a complete URL
+          ? imageUrl
           : `https://bizconnect.a1professionals.net/storage/uploads/profile_pic/${imageUrl}`;
-
-        // Update the profile image state with the full URL
         setProfileImage({ uri: fullImageUrl });
 
         Alert.alert('Success', 'Profile image updated successfully');
