@@ -1,21 +1,20 @@
-import { NavigationContainer } from "@react-navigation/native";
-import { StatusBar} from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import StackNavigation from "./src/navigation/StackNavigation";
-import { Provider } from "react-redux";
-import store from "./src/redux/store";
+import {NavigationContainer} from '@react-navigation/native';
+import {StatusBar} from 'react-native';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import StackNavigation from './src/navigation/StackNavigation';
+import {Provider} from 'react-redux';
+import store from './src/redux/store';
 
-
-function App(){
+function App() {
   return (
-    //  <Provider store={store}>
-       <NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
         <SafeAreaProvider>
-        <StatusBar backgroundColor="#00008B"/>
-        <StackNavigation/>
+          <StatusBar backgroundColor="#00008B" />
+          <StackNavigation />
         </SafeAreaProvider>
       </NavigationContainer>
-    //  </Provider>
+    </Provider>
   );
 }
 export default App;

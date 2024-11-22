@@ -123,7 +123,7 @@ const Login = () => {
         const provider_name = 'google';
         const provider_id = userInfo.data.user.id;
         console.log('id', userInfo.data.user.id);
-        sociallogin(email, provider_name, provider_id);
+       await sociallogin(email, provider_name, provider_id);
         // console.log('email', userInfo.data.user.email);
         // console.log('User Info:', userInfo);
         navigation.navigate('Home');
@@ -170,7 +170,7 @@ const Login = () => {
         if (token) {
           await AsyncStorage.setItem('token', token);
         }
-        Alert.alert("Login Successfully");
+        Alert.alert('Login Successfully');
         console.log('Social Login Response:', res.data);
       } else {
         Alert.alert('Error', 'Something went wrong with social login.');
@@ -180,10 +180,10 @@ const Login = () => {
 
       if (error.response) {
         console.log('Error response from server:', error.response.data);
-        Alert.alert(
-          'Error',
-          `Server error: ${error.response.data.message || 'Unknown error'}`,
-        );
+        // Alert.alert(
+        //   'Error',
+        //   `Server error: ${error.response.data.message || 'Unknown error'}`,
+        // );
       } else if (error.request) {
         console.log('Error request:', error.request);
         Alert.alert(
@@ -204,7 +204,7 @@ const Login = () => {
       <ImageBackground
         source={require('../assets/background.png')}
         resizeMode="cover"
-        style={{flex: 1, width: '100%', height: '100%'}}>
+        style={{flex: 1, width: '100%', height:'100%'}}>
         <Formik
           initialValues={{
             email: '',
@@ -320,7 +320,7 @@ const Login = () => {
                   </TouchableOpacity>
                 </View>
 
-                <View style={{marginTop: 20}}>
+                <View style={{marginTop: 10}}>
                   <Text style={[styles.h3, {textAlign: 'center'}]}>or</Text>
                   <TouchableOpacity style={styles.btnview2} onPress={signIn}>
                     <Image

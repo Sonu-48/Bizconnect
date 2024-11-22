@@ -8,5 +8,6 @@ export const Base_url = {
     addreviews:`${base_url}add/reviews`,
     getreviews:`${base_url}get/reviews`,
     updateProfile:`${base_url}users/update/profile`,
-    profilepic:`${base_url}users/upload/profilepic`
+    profilepic:`${base_url}users/upload/profilepic`,
+    profileData:`${base_url}users/profile/detail`,
 }
