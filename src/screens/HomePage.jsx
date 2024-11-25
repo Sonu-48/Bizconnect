@@ -161,7 +161,7 @@ const HomePage = () => {
               <Text style={[styles.h5, {marginTop: 10}]}>Invoices</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={{flex: 1}}>
+          <TouchableOpacity style={{flex: 1}} onPress={()=>navigation.navigate('Insights')}>
             <LinearGradient
               colors={['#00008B', '#ADD8E6']}
               style={styles.linearGradient}>

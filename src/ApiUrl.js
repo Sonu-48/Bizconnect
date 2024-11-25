@@ -10,4 +10,5 @@ export const Base_url = {
     updateProfile:`${base_url}users/update/profile`,
     profilepic:`${base_url}users/upload/profilepic`,
     profileData:`${base_url}users/profile/detail`,
+    getContent:`${base_url}getpage/content`,
 }

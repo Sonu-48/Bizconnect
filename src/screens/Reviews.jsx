@@ -1,11 +1,20 @@
-import {FlatList, Image, Text, TouchableOpacity, View} from 'react-native';
+import {
+  FlatList,
+  Image,
+  Linking,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles/Styles';
-import {useNavigation} from '@react-navigation/native';
+import {Link, useNavigation} from '@react-navigation/native';
 import {useEffect, useState} from 'react';
 import axios from 'axios';
 import {Base_url} from '../ApiUrl';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useDispatch, useSelector} from 'react-redux';
+import {getUserdata} from '../redux/UserDataSlice';
 
 const renderReviews = ({item}) => {
   return (
@@ -47,14 +56,17 @@ const renderReviews = ({item}) => {
 
 const Reviews = () => {
   const navigation = useNavigation();
-  // const [selectTab, setSelectTab] = useState('Completed Review');
+  const [selectTab, setSelectTab] = useState('Completed Review');
   const [token, setToken] = useState(null);
+  const [loading,setLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const userData = useSelector(state => state.user);
+  console.log('userData', userData.user);
 
   // handleTab function
-  // const handleTab = (tab) => {
-  //   setSelectTab(tab);
-  // };
+  const handleTab = (tab) => {
+    setSelectTab(tab);
+  };
 
   // get Reviews Api
   const getReviews = async () => {
@@ -78,7 +90,7 @@ const Reviews = () => {
 
       if (res.data.success === true) {
         console.log(res.data.message);
-        setReviews(res.data.data);
+        setReviews(res.data.data.reviews);
       } else {
         Alert.alert('Error', 'Unable to fetch reviews.');
       }
@@ -111,6 +123,31 @@ const Reviews = () => {
     getReviews();
   }, [token]);
 
+  // for Google link
+  const openGoogleLink = () => {
+    const url = userData.user.google_link;
+    const formattedUrl =
+      url.startsWith('http://') || url.startsWith('https://')
+        ? url
+        : `https://${url}`;
+
+    Linking.openURL(formattedUrl).catch(err =>
+      console.error('Failed to open URL:', err),
+    );
+  };
+
+  // for Facebook Link
+  const openFacebookLink = () => {
+    const url = userData.user.facebook_link;
+    const formattedUrl =
+      url.startsWith('http://') || url.startsWith('https://')
+        ? url
+        : `https://${url}`;
+    Linking.openURL(formattedUrl).catch(err =>
+      console.error('Failed to open URL:', err),
+    );
+  };
+
   return (
     <>
       {/* Header Section */}
@@ -141,10 +178,10 @@ const Reviews = () => {
               width: '60%',
               marginTop: 30,
             }}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={openGoogleLink}>
               <Image source={require('../assets/google-icon.png')} />
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={openFacebookLink}>
               <Image source={require('../assets/facebook-icon.png')} />
             </TouchableOpacity>
             <TouchableOpacity>
@@ -153,7 +190,7 @@ const Reviews = () => {
           </View>
 
           {/* Tab Navigation */}
-          {/* <View
+          <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
@@ -205,7 +242,7 @@ const Reviews = () => {
                 Pending Review
               </Text>
             </TouchableOpacity>
-          </View> */}
+          </View>
         </View>
         <FlatList
           data={reviews}

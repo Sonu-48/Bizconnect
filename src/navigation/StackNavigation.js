@@ -13,6 +13,7 @@ import OtpScreen from "../OtpScreen";
 import Reviews from "../screens/Reviews";
 import Settings from "../screens/Settings";
 import ProfileScreen from "../screens/ProfileScreen";
+import Insights from "../screens/Insights/Insights";
 
 
 const Stack = createNativeStackNavigator();
@@ -33,6 +34,7 @@ const StackNavigation=()=>{
             <Stack.Screen name="OtpScreen" component={OtpScreen} options={{headerShown:false}}/>
             <Stack.Screen name="Setting" component={Settings} options={{headerShown:false}}/>
             <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{headerShown:false}}/>
+            <Stack.Screen name="Insights" component={Insights} options={{headerShown:false}}/>
         </Stack.Navigator>
     );
 }

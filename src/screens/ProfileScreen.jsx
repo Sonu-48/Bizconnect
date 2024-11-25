@@ -165,7 +165,11 @@ const ProfileScreen = () => {
             <Text style={styles.h3}>Profile</Text>
             <View style={{position: 'relative'}}>
               <Image
-                source={{uri: user.profile_pic}}
+                source={
+                  user.profile_pic
+                    ? {uri: user.profile_pic}
+                    : require('../assets/user2.png')
+                }
                 style={{
                   width: 120,
                   height: 120,
@@ -184,7 +188,6 @@ const ProfileScreen = () => {
           </View>
         </View>
       </ImageBackground>
-
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
           <View style={{marginTop: 40}}>
