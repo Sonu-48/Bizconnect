@@ -6,7 +6,7 @@ import {getReview} from '../redux/GetReviewSlice';
 const renderReviews = ({item}) => {
   return (
     <>
-      {item?.status === 'Completed' && (
+      {item?.status === 'Pending' && (
         <View style={styles.reviewWrapper}>
           <View style={styles.reviewHeader}>
             <Text style={styles.businessName}>{item.business_name}</Text>
@@ -30,7 +30,7 @@ const renderReviews = ({item}) => {
   );
 };
 
-const CompletedReviews = () => {
+const PendingReview = () => {
   const review = useSelector(state => state.review.review);
   const dispatch = useDispatch();
 
@@ -38,13 +38,13 @@ const CompletedReviews = () => {
     dispatch(getReview());
   }, [dispatch]);
 
-  const CompletedReviews = useMemo(() => {
-    return review.filter(item => item.status === 'Completed');
+  const pendingReview = useMemo(() => {
+    return review.filter(item => item.status === 'Pending');
   }, [review]);
 
   return (
     <FlatList
-      data={CompletedReviews}
+      data={pendingReview}
       renderItem={renderReviews}
       keyExtractor={(item, index) =>
         item.id ? item.id.toString() : index.toString()
@@ -118,4 +118,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CompletedReviews;
+export default PendingReview;

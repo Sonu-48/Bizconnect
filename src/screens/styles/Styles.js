@@ -359,6 +359,11 @@ otpBox: {
 icon:{
   width:50,
   height:50
+},
+flex:{
+  flexDirection:'row',
+  alignItems:'center',
+  justifyContent:'space-between'
 }
 
 });

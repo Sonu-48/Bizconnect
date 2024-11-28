@@ -14,6 +14,9 @@ import Reviews from "../screens/Reviews";
 import Settings from "../screens/Settings";
 import ProfileScreen from "../screens/ProfileScreen";
 import Insights from "../screens/Insights/Insights";
+import CompletedReviews from "../screens/CompletedReviews";
+import CreateTicket from "../screens/Ticket/CreateTicket";
+import Tickets from "../screens/Ticket/Tickets";
 
 
 const Stack = createNativeStackNavigator();
@@ -35,6 +38,8 @@ const StackNavigation=()=>{
             <Stack.Screen name="Setting" component={Settings} options={{headerShown:false}}/>
             <Stack.Screen name="ProfileScreen" component={ProfileScreen} options={{headerShown:false}}/>
             <Stack.Screen name="Insights" component={Insights} options={{headerShown:false}}/>
+            <Stack.Screen name="CreateTicket" component={CreateTicket} options={{headerShown:false}}/>
+            <Stack.Screen name="Tickets" component={Tickets} options={{headerShown:false}}/>
         </Stack.Navigator>
     );
 }

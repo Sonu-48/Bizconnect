@@ -1,4 +1,6 @@
+import React, {useEffect, useState} from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   Linking,
@@ -8,144 +10,62 @@ import {
 } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles/Styles';
-import {Link, useNavigation} from '@react-navigation/native';
-import {useEffect, useState} from 'react';
-import axios from 'axios';
-import {Base_url} from '../ApiUrl';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
 import {getUserdata} from '../redux/UserDataSlice';
-
-const renderReviews = ({item}) => {
-  return (
-    <>
-      <View style={styles.reviewwrappper}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-          <Text style={styles.h4}>{item.business_name}</Text>
-          <View style={{flexDirection: 'row'}}>
-            <Text style={{color: '#F34343', fontSize: 15}}>Invoice No:</Text>
-            <Text style={{fontSize: 16, color: '#00008B'}}>
-              {item.invoice_number}
-            </Text>
-          </View>
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-          <Text>{item.date}</Text>
-          <View style={{flexDirection: 'row'}}>
-            <Text style={{color: '#F34343', fontSize: 15}}>Order No:</Text>
-            <Text style={{fontSize: 16, color: '#00008B'}}>
-              {item.order_number}
-            </Text>
-          </View>
-        </View>
-        <Text style={styles.reviewtext}>{item.description}</Text>
-      </View>
-    </>
-  );
-};
+import {getReview} from '../redux/GetReviewSlice';
+import CompletedReviews from './CompletedReviews';
+import PendingReview from './PendingReview';
 
 const Reviews = () => {
   const navigation = useNavigation();
-  const [selectTab, setSelectTab] = useState('Completed Review');
-  const [token, setToken] = useState(null);
-  const [loading,setLoading] = useState(false);
-  const [reviews, setReviews] = useState([]);
-  const userData = useSelector(state => state.user);
-  console.log('userData', userData.user);
+  const [selectTab, setSelectTab] = useState('Completed');
+  const dispatch = useDispatch();
+  const userData = useSelector(state => state.user || {});
+  const reviewData = useSelector(state => state.review || []);
 
-  // handleTab function
-  const handleTab = (tab) => {
+  // Fetch user data when the component mounts
+  useEffect(() => {
+    dispatch(getUserdata());
+  }, [dispatch]);
+
+  // Fetch reviews based on the selected tab
+  useEffect(() => {
+    dispatch(getReview());
+  }, [selectTab, dispatch]);
+
+  const handleTab = tab => {
     setSelectTab(tab);
   };
 
-  // get Reviews Api
-  const getReviews = async () => {
-    const token = await AsyncStorage.getItem('token');
-    setToken(token);
-    console.log('Token:', token);
-    if (!token) {
-      Alert.alert('Error', 'User is not logged in or token is missing.');
-      return;
-    }
-
-    try {
-      const res = await axios({
-        method: 'get',
-        url: Base_url.getreviews,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer ' + token,
-        },
-      });
-
-      if (res.data.success === true) {
-        console.log(res.data.message);
-        setReviews(res.data.data.reviews);
-      } else {
-        Alert.alert('Error', 'Unable to fetch reviews.');
-      }
-    } catch (error) {
-      if (error.response) {
-        if (error.response.status === 403) {
-          Alert.alert(
-            'Access Denied',
-            'You do not have permission to view reviews.',
-          );
-          await AsyncStorage.clear();
-          navigation.navigate('Login');
-        } else {
-          Alert.alert(
-            'Error',
-            error.response.data.message || 'An error occurred.',
-          );
-        }
-      } else {
-        console.error('Network or Request Error:', error);
-        Alert.alert(
-          'Error',
-          'An error occurred while fetching reviews. Please check your internet connection.',
-        );
-      }
-    }
-  };
-
-  useEffect(() => {
-    getReviews();
-  }, [token]);
-
-  // for Google link
+  // Open Google link
   const openGoogleLink = () => {
-    const url = userData.user.google_link;
-    const formattedUrl =
-      url.startsWith('http://') || url.startsWith('https://')
-        ? url
-        : `https://${url}`;
-
-    Linking.openURL(formattedUrl).catch(err =>
-      console.error('Failed to open URL:', err),
-    );
+    if (userData && userData.user && userData.user.google_link) {
+      const url = userData.user.google_link;
+      const formattedUrl =
+        url.startsWith('http://') || url.startsWith('https://')
+          ? url
+          : `https://${url}`;
+      Linking.openURL(formattedUrl).catch(err =>
+        console.error('Failed to open URL:', err),
+      );
+    } else {
+      console.error('Google link is not available');
+    }
   };
 
-  // for Facebook Link
+  // Open Facebook link
   const openFacebookLink = () => {
-    const url = userData.user.facebook_link;
-    const formattedUrl =
-      url.startsWith('http://') || url.startsWith('https://')
-        ? url
-        : `https://${url}`;
-    Linking.openURL(formattedUrl).catch(err =>
-      console.error('Failed to open URL:', err),
-    );
+    if (userData && userData.user && userData.user.facebook_link) {
+      const url = userData.user.facebook_link;
+      const formattedUrl =
+        url.startsWith('http://') || url.startsWith('https://')
+          ? url
+          : `https://${url}`;
+      Linking.openURL(formattedUrl).catch(err =>
+        console.error('Failed to open URL:', err),
+      );
+    }
   };
 
   return (
@@ -196,15 +116,16 @@ const Reviews = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               width: '100%',
-              marginTop: 70,
+              marginTop: 40,
+              marginBottom:20
             }}>
             <TouchableOpacity
-              onPress={() => handleTab('Completed Review')}
+              onPress={() => handleTab('Completed')}
               style={[
                 styles.activetabbtn,
                 {
                   backgroundColor:
-                    selectTab === 'Completed Review' ? '#00008B' : '#F4F3F3',
+                    selectTab === 'Completed' ? '#00008B' : '#F4F3F3',
                   borderRadius: 15,
                   padding: 20,
                 },
@@ -212,21 +133,18 @@ const Reviews = () => {
               <Text
                 style={[
                   styles.activetabttext,
-                  {
-                    color:
-                      selectTab === 'Completed Review' ? '#fff' : '#898585',
-                  },
+                  {color: selectTab === 'Completed' ? '#fff' : '#898585'},
                 ]}>
-                Completed Review
+                Completed Reviews
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => handleTab('Pending Review')}
+              onPress={() => handleTab('Pending')}
               style={[
                 styles.activetabbtn,
                 {
                   backgroundColor:
-                    selectTab === 'Pending Review' ? '#00008B' : '#F4F3F3',
+                    selectTab === 'Pending' ? '#00008B' : '#F4F3F3',
                   borderRadius: 15,
                   padding: 20,
                 },
@@ -234,21 +152,16 @@ const Reviews = () => {
               <Text
                 style={[
                   styles.activetabttext,
-                  {
-                    color:
-                      selectTab === 'Pending Review' ? '#fff' : '#898585',
-                  },
+                  {color: selectTab === 'Pending' ? '#fff' : '#898585'},
                 ]}>
-                Pending Review
+                Pending Reviews
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-        <FlatList
-          data={reviews}
-          renderItem={renderReviews}
-          // keyExtractor={item => item.id.toString()}
-        />
+        {/* Conditional Rendering for Reviews */}
+        {selectTab === 'Pending' && <PendingReview />}
+        {selectTab === 'Completed' && <CompletedReviews />}
       </View>
 
       {/* Add Review Button */}

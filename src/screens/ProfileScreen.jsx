@@ -214,7 +214,6 @@ const ProfileScreen = () => {
                 />
               </View>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={{
                 flexDirection: 'row',
@@ -223,7 +222,8 @@ const ProfileScreen = () => {
                 paddingBottom: 10,
                 alignItems: 'center',
                 marginTop: 20,
-              }}>
+              }}
+              onPress={() => navigation.navigate('Tickets')}>
               <View style={{alignItems: 'center', flexDirection: 'row'}}>
                 <Image source={require('../assets/support.png')} />
                 <Text style={[styles.h3, {color: '#000000', marginLeft: 10}]}>
