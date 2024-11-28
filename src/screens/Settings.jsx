@@ -15,6 +15,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Base_url} from '../ApiUrl';
 import {useNavigation} from '@react-navigation/native';
+import Header from '../component/Header';
 
 // Validation
 const validationSchema = yup.object().shape({
@@ -61,24 +62,7 @@ const Settings = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       {/*headersection */}
-      <View
-        style={[
-          styles.headersection,
-          {paddingTop: 20, paddingBottom: 20, marginTop: 1},
-        ]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{
-            position: 'absolute',
-            left: 10,
-            width: 50,
-            height: 50,
-            top: 25,
-          }}>
-          <MaterialIcons name="arrow-back-ios-new" size={25} color="#ffff" />
-        </TouchableOpacity>
-        <Text style={styles.h3}>Settings</Text>
-      </View>
+     <Header title="Settings"/>
       <Formik
         initialValues={{
           google: '',

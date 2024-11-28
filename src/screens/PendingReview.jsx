@@ -1,7 +1,13 @@
 import React, {useEffect, useMemo} from 'react';
-import {Text, View, FlatList, StyleSheet} from 'react-native';
+import {
+  Text,
+  View,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {getReview} from '../redux/GetReviewSlice';
+import styles from './styles/Styles';
 
 const renderReviews = ({item}) => {
   return (
@@ -29,9 +35,8 @@ const renderReviews = ({item}) => {
     </>
   );
 };
-
 const PendingReview = () => {
-  const review = useSelector(state => state.review.review);
+  const {review, loading} = useSelector(state => state.review);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -41,6 +46,16 @@ const PendingReview = () => {
   const pendingReview = useMemo(() => {
     return review.filter(item => item.status === 'Pending');
   }, [review]);
+
+  //  loader
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Loading Reviews...</Text>
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -53,69 +68,5 @@ const PendingReview = () => {
     />
   );
 };
-
-const styles = StyleSheet.create({
-  reviewWrapper: {
-    backgroundColor: '#fff',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 10,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  reviewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  businessName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  invoiceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  invoiceLabel: {
-    color: '#F34343',
-    fontSize: 15,
-  },
-  invoiceNumber: {
-    fontSize: 16,
-    color: '#00008B',
-  },
-  reviewDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 10,
-  },
-  orderContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  orderLabel: {
-    color: '#F34343',
-    fontSize: 15,
-  },
-  orderNumber: {
-    fontSize: 16,
-    color: '#00008B',
-  },
-  reviewText: {
-    fontSize: 16,
-    color: '#333',
-    marginTop: 10,
-  },
-  flatListContainer: {
-    paddingBottom: 20,
-    paddingHorizontal: 10,
-  },
-});
 
 export default PendingReview;

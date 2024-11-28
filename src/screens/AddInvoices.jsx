@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { Base_url } from '../ApiUrl';
 import moment from 'moment';
+import Header from '../component/Header';
 
 // Validation schema
 const validationSchema = yup.object().shape({
@@ -161,21 +162,7 @@ const AddInvoices = () => {
   return (
     <>
       {/* Header Section */}
-      <View style={[styles.headersection, { paddingTop: 20, paddingBottom: 20 }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{
-            position: 'absolute',
-            left: 10,
-            width: 50,
-            height: 50,
-            top: 25,
-          }}
-        >
-          <MaterialIcons name="arrow-back-ios-new" size={25} color="#ffff" />
-        </TouchableOpacity>
-        <Text style={styles.h3}>Invoices</Text>
-      </View>
+   <Header title="Invoices"/>
       <ScrollView style={{ paddingBottom: 50 }}>
         <Formik
           initialValues={{

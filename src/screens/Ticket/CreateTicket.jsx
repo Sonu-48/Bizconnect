@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {Formik} from 'formik';
 import * as yup from 'yup';
 import {Picker} from '@react-native-picker/picker';
@@ -17,6 +16,7 @@ import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import {Base_url} from '../../ApiUrl';
+import Header from '../../component/Header';
 
 // Validation schema
 const validationSchema = yup.object().shape({
@@ -71,25 +71,7 @@ const CreateTicket = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       {/* Header Section */}
-      <View
-        style={[
-          styles.headersection,
-          {paddingTop: 20, paddingBottom: 20, marginTop: 1},
-        ]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{
-            position: 'absolute',
-            left: 10,
-            width: 50,
-            height: 50,
-            top: 25,
-          }}>
-          <MaterialIcons name="arrow-back-ios-new" size={25} color="#ffff" />
-        </TouchableOpacity>
-        <Text style={styles.h3}>Support</Text>
-      </View>
-
+     <Header title="Support"/>
       {/* Formik form */}
       <Formik
         initialValues={{

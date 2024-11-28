@@ -15,4 +15,5 @@ export const Base_url = {
     getInvoice:`${base_url}get/invoice`,
     createTicket:`${base_url}app/createticket`,
     tickets:`${base_url}app/tickets`,
+    getUser:`${base_url}app/getusers`,
 }

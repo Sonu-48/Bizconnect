@@ -1,7 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
   Image,
   Linking,
   Text,
@@ -16,6 +14,7 @@ import {getUserdata} from '../redux/UserDataSlice';
 import {getReview} from '../redux/GetReviewSlice';
 import CompletedReviews from './CompletedReviews';
 import PendingReview from './PendingReview';
+import Header from '../component/Header';
 
 const Reviews = () => {
   const navigation = useNavigation();
@@ -71,20 +70,7 @@ const Reviews = () => {
   return (
     <>
       {/* Header Section */}
-      <View style={[styles.headersection, {paddingTop: 20, paddingBottom: 20}]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={{
-            position: 'absolute',
-            left: 10,
-            width: 50,
-            height: 50,
-            top: 25,
-          }}>
-          <MaterialIcons name="arrow-back-ios-new" size={25} color="#ffff" />
-        </TouchableOpacity>
-        <Text style={styles.h3}>Reviews</Text>
-      </View>
+     <Header title="Reviews"/>
 
       <View style={styles.container}>
         <View style={{alignItems: 'center', marginTop: 40}}>
