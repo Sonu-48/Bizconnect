@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,73 +9,148 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {launchImageLibrary} from 'react-native-image-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import styles from './styles/Styles';
+import {firebase} from '../firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ChatScreen = () => {
-  const [messages, setMessages] = useState([
-    { id: '1', text: 'Hi', type: 'received' },
-    { id: '2', text: 'HI', type: 'sent' },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [image, setImage] = useState(null);
   const [caption, setCaption] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [userId, setUserId] = useState(null);
   const navigation = useNavigation();
+  const route = useRoute();
 
-  // Start Video Call Function
-  const handleVideoCall = () => {
-    navigation.navigate('VideoCallScreen');
-  };
+  const {userName, userProfilePic, chatId} = route.params;
 
-  // Send Message Function
-  const sendMessage = () => {
-    if (messageText.trim() || image) {
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const storedUserId = await AsyncStorage.getItem('user-id');
+      setUserId(storedUserId);
+    };
+
+    fetchUserId();
+
+    const messagesRef = firebase.database().ref(`messages/${chatId}`);
+
+    // Fetch existing messages for this specific chat
+    messagesRef.once('value', snapshot => {
+      const messagesData = snapshot.val();
+      if (messagesData) {
+        const messageList = Object.keys(messagesData).map(key => ({
+          id: key,
+          ...messagesData[key],
+        }));
+        setMessages(messageList.reverse()); // Display oldest messages first
+      }
+    });
+
+    // Listen for new messages in the chat
+    messagesRef.on('child_added', snapshot => {
+      setMessages(prevMessages => [snapshot.val(), ...prevMessages]);
+    });
+
+    // Cleanup listener when the component unmounts
+    return () => {
+      messagesRef.off('child_added');
+      setMessages([]);
+    };
+  }, [chatId]);
+
+  const sendMessage = async () => {
+    if (isSending || !userId) return;
+
+    setIsSending(true);
+
+    try {
+      let imageUrl = null;
+
+      // If there's an image, upload it first
+      if (image) {
+        const uploadTask = firebase
+          .storage()
+          .ref()
+          .child(`images/${image.fileName}`)
+          .putFile(image.uri);
+        await uploadTask.on(
+          'state_changed',
+          snapshot => {},
+          error => {
+            throw new Error('Image upload failed');
+          },
+          async () => {
+            imageUrl = await uploadTask.snapshot.ref.getDownloadURL();
+          },
+        );
+      }
+
+      // Create the message object
       const newMessage = {
-        id: String(messages.length + 1),
-        text: messageText.trim() || caption, // If there's no message text, use the caption
+        text: messageText.trim() || caption,
         type: 'sent',
-        image: image ? image.uri : null, // Include image if selected
+        image: imageUrl,
         caption: caption,
+        userId: userId,
+        timestamp: firebase.database.ServerValue.TIMESTAMP,
       };
 
-      setMessages(prevMessages => [...prevMessages, newMessage]);
+      // Push the new message to Firebase
+      const messageRef = await firebase
+        .database()
+        .ref(`messages/${chatId}`)
+        .push(newMessage);
+      const messageWithId = {id: messageRef.key, ...newMessage};
+
+      // Update the local state to include the new message
+      setMessages(prevMessages => [messageWithId, ...prevMessages]);
+
+      // Clear the input fields
       setMessageText('');
       setCaption('');
-      setImage(null); // Clear image and caption after sending
+      setImage(null);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsSending(false);
     }
   };
 
-  // Pick an Image from the Library
   const pickImage = () => {
-    launchImageLibrary({ mediaType: 'photo' }, (response) => {
+    launchImageLibrary({mediaType: 'photo'}, response => {
       if (response.assets && response.assets.length > 0) {
         setImage(response.assets[0]);
       }
     });
   };
 
-  const renderMessage = ({ item }) => (
+  const renderMessage = ({item}) => (
     <View
-      style={item.type === 'sent' ? styles.sentMessage : styles.receivedMessage}
-    >
+      style={[
+        item.userId === userId ? styles.sentMessage : styles.receivedMessage,
+      ]}>
       <View
-        style={item.type === 'sent' ? styles.bubbleSent : styles.bubbleReceived}
-      >
+        style={
+          item.userId === userId ? styles.bubbleSent : styles.bubbleReceived
+        }>
         {item.image ? (
           <View>
-            <Image source={{ uri: item.image }} style={styles.imagePreview} />
+            <Image source={{uri: item.image}} style={styles.imagePreview} />
             {item.caption && <Text style={styles.caption}>{item.caption}</Text>}
           </View>
         ) : (
-          <Text style={{ color: item.type === 'sent' ? '#000' : '#fff' }}>
+          <Text style={{color: item.userId === userId ? '#000' : '#fff'}}>
             {item.text}
           </Text>
         )}
         <View
           style={
-            item.type === 'sent' ? styles.triangleSent : styles.triangleReceived
+            item.userId === userId
+              ? styles.triangleSent
+              : styles.triangleReceived
           }
         />
       </View>
@@ -83,36 +158,15 @@ const ChatScreen = () => {
   );
 
   return (
-    <View style={[styles.container,{marginLeft:0,marginRight:0}]}>
-      {/* Header section */}
-      <View
-        style={[
-          styles.headersection,
-          { padding: 10, justifyContent: 'space-between', alignItems: 'center' },
-        ]}
-      >
+    <View style={styles.container}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <MaterialIcons name="arrow-back-ios-new" size={25} color="#ffff" />
+          <MaterialIcons name="arrow-back-ios-new" size={25} color="#fff" />
         </TouchableOpacity>
-        <TextInput
-          placeholder="Search here"
-          placeholderTextColor="#000"
-          style={[
-            styles.textfield,
-            { width: '60%', marginLeft: 20, padding: 5, marginTop: 0, fontSize: 18 },
-          ]}
-        />
-        <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity style={{ marginRight: 25 }}>
-            <Icon name="call-outline" size={25} color="#ffff" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleVideoCall}>
-            <Icon name="videocam-outline" size={25} color="#ffff" />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerText}>{userName}</Text>
+        <Image source={{uri: userProfilePic}} style={styles.profilePic} />
       </View>
 
-      {/* Message List */}
       <FlatList
         data={messages}
         renderItem={renderMessage}
@@ -120,7 +174,6 @@ const ChatScreen = () => {
         style={styles.messageList}
       />
 
-      {/* Input Field with Conditional Icons */}
       <View style={styles.inputContainer}>
         <TouchableOpacity onPress={pickImage}>
           <Icon name="camera" size={30} color="#002D93" />
@@ -131,9 +184,6 @@ const ChatScreen = () => {
           placeholder="Type a message"
           style={styles.textInput}
         />
-        <TouchableOpacity onPress={pickImage}>
-          <Icon name="add" size={30} color="#002D93" style={{ marginRight: 10 }} />
-        </TouchableOpacity>
         {messageText || image ? (
           <TouchableOpacity onPress={sendMessage}>
             <Icon name="send" size={30} color="#002D93" />
@@ -145,10 +195,9 @@ const ChatScreen = () => {
         )}
       </View>
 
-      {/* Image and Caption Input when Image is Selected */}
       {image && (
         <View style={styles.imageContainer}>
-          <Image source={{ uri: image.uri }} style={styles.selectedImage} />
+          <Image source={{uri: image.uri}} style={styles.selectedImage} />
           <TextInput
             value={caption}
             onChangeText={setCaption}
@@ -160,5 +209,86 @@ const ChatScreen = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {flex: 1, backgroundColor: '#f4f4f4'},
+  header: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: '#002D93',
+    alignItems: 'center',
+  },
+  headerText: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  profilePic: {width: 40, height: 40, borderRadius: 20},
+  messageList: {flex: 1, paddingTop: 10},
+  sentMessage: {alignSelf: 'flex-end'},
+  receivedMessage: {alignSelf: 'flex-start'},
+  bubbleSent: {
+    backgroundColor: '#00B8F4',
+    padding: 10,
+    borderRadius: 10,
+    maxWidth: '80%',
+  },
+  bubbleReceived: {
+    backgroundColor: '#E4E6EB',
+    padding: 10,
+    borderRadius: 10,
+    maxWidth: '80%',
+  },
+  triangleSent: {
+    position: 'absolute',
+    bottom: -10,
+    right: 10,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10,
+    borderLeftColor: '#00B8F4',
+  },
+  triangleReceived: {
+    position: 'absolute',
+    bottom: -10,
+    left: 10,
+    width: 0,
+    height: 0,
+    borderRightWidth: 10,
+    borderRightColor: '#E4E6EB',
+  },
+  imagePreview: {width: 200, height: 200, borderRadius: 10},
+  caption: {color: '#888', fontSize: 12, textAlign: 'center', marginTop: 5},
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    padding: 5,
+    borderRadius: 20,
+    backgroundColor: '#f1f1f1',
+  },
+  imageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#f1f1f1',
+  },
+  selectedImage: {width: 100, height: 100, marginRight: 10, borderRadius: 10},
+  captionInput: {
+    flex: 1,
+    fontSize: 16,
+    padding: 5,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+  },
+});
 
 export default ChatScreen;

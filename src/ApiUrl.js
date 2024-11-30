@@ -16,4 +16,5 @@ export const Base_url = {
     createTicket:`${base_url}app/createticket`,
     tickets:`${base_url}app/tickets`,
     getUser:`${base_url}app/getusers`,
+    userSearch:`${base_url}get/search/users`,
 }

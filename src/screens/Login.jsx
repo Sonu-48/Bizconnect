@@ -58,9 +58,13 @@ const Login = () => {
       resetForm();
 
       await AsyncStorage.setItem('email', values.email);
+     
 
       if (res.data.success === true) {
         const token = res.data.data.token;
+        const user_id= res.data.user_id;
+        console.log("userId",user_id);
+        await AsyncStorage.setItem('user-id', String(user_id));
         const screen = res.data.screen;
         if (token) {
           await AsyncStorage.setItem('token', token);

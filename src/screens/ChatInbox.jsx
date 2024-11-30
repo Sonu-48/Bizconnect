@@ -1,3 +1,4 @@
+import React, {useState, useEffect} from 'react';
 import {
   FlatList,
   Image,
@@ -10,11 +11,11 @@ import styles from './styles/Styles';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {useNavigation} from '@react-navigation/native';
+import axios from 'axios';
 import {useDispatch, useSelector} from 'react-redux';
-import {useEffect} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getUser} from '../redux/GetUserSlice';
 
-// Add a fallback image URL or an asset image
 const defaultImage = require('../assets/user-image.png');
 
 const ChatInbox = () => {
@@ -22,12 +23,80 @@ const ChatInbox = () => {
   const userData = useSelector(state => state.getuser.getuser);
   const dispatch = useDispatch();
 
+  // State to handle search query and filtered users
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Function to handle search input change
+  const handleSearchChange = query => {
+    setSearchQuery(query);
+    fetchSearchResults(query);
+  };
+
+  // Fetch search results from API based on query
+  const fetchSearchResults = async query => {
+    if (query.trim() === '') {
+      setFilteredUsers(userData);
+      setError(null);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        console.error('No token found');
+        setLoading(false);
+        return;
+      }
+
+      // Send the search query in the body as POST request
+      const response = await axios.post(
+        'https://bizconnect.a1professionals.net/api/v1/get/search/users',
+        {search: query},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.data.success) {
+        setFilteredUsers(response.data.data || []);
+      } else {
+        setError('No matching users found');
+        setFilteredUsers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching search results:', error);
+      setError('Error fetching search results');
+      setFilteredUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Effect hook to dispatch getUser and initialize filtered users on first render
   useEffect(() => {
     dispatch(getUser());
   }, [dispatch]);
 
+  useEffect(() => {
+    setFilteredUsers(userData);
+  }, [userData]);
+
+  // Render each item in the FlatList
   const renderChatData = ({item}) => (
-    <TouchableOpacity onPress={() => navigation.navigate('ChatScreen')}>
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate('ChatScreen', {
+          userName: item.full_name, // Ensure this is passed
+          userProfilePic: item.profile_pic, // Ensure this is passed
+          chatId: item.id, // Ensure chatId is passed
+        })
+      }>
       <View style={styles.chatinboxwrapper}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
           {item.profile_pic ? (
@@ -69,23 +138,39 @@ const ChatInbox = () => {
         <TextInput
           placeholder="Search here"
           placeholderTextColor="#000"
+          value={searchQuery}
+          onChangeText={handleSearchChange}
           style={[
             styles.textfield,
-            {width: '60%', marginLeft: 20, padding: 5, marginTop: 0},
+            {
+              width: '60%',
+              height: 40,
+              marginLeft: 20,
+              padding: 5,
+              marginTop: 0,
+            },
           ]}
         />
       </View>
-
-      {userData && userData.length > 0 ? (
+      {/* Display loading or error states */}
+      {loading ? (
+        <View style={{alignItems: 'center', marginTop: 20}}>
+          <Text>Loading...</Text>
+        </View>
+      ) : error ? (
+        <View style={{alignItems: 'center', marginTop: 20}}>
+          <Text>{error}</Text>
+        </View>
+      ) : filteredUsers.length > 0 ? (
         <FlatList
-          data={userData}
+          data={filteredUsers}
           renderItem={renderChatData}
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.scrollContainer}
         />
       ) : (
-        <View>
-          <Text style={styles.noDataText}>No users available</Text>
+        <View style={{alignItems: 'center', marginTop: 20}}>
+          <Text>No matching users found</Text>
         </View>
       )}
     </>
