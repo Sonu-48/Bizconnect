@@ -92,9 +92,9 @@ const ChatInbox = () => {
     <TouchableOpacity
       onPress={() =>
         navigation.navigate('ChatScreen', {
-          userName: item.full_name, // Ensure this is passed
-          userProfilePic: item.profile_pic, // Ensure this is passed
-          chatId: item.id, // Ensure chatId is passed
+          userName: item.full_name, 
+          userProfilePic: item.profile_pic, 
+          chatId: item.id,
         })
       }>
       <View style={styles.chatinboxwrapper}>

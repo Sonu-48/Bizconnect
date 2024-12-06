@@ -13,8 +13,8 @@ const getUserdata = createAsyncThunk("getUserdata", async (_, { rejectWithValue 
         const res = await axios.get(Base_url.profileData, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + token,
-            }
+                Authorization: `Bearer ${token}`,
+              },
         });
         return res.data.data;
     } catch (error) {

@@ -126,10 +126,14 @@ const Login = () => {
         const email = userInfo.data.user.email;
         const provider_name = 'google';
         const provider_id = userInfo.data.user.id;
-        console.log('id', userInfo.data.user.id);
+        const user_id = userInfo.data.user.id;
+        await AsyncStorage.setItem('user-id', String(user_id));
        await sociallogin(email, provider_name, provider_id);
-        // console.log('email', userInfo.data.user.email);
-        // console.log('User Info:', userInfo);
+       const name = userInfo.data.user.name;
+       const profile_pic = userInfo.data.user.photo;
+       await AsyncStorage.setItem('profile_pic',profile_pic);
+       await AsyncStorage.setItem('name', name);
+        console.log('User Info:', userInfo);
         navigation.navigate('Home');
       }
     } catch (error) {

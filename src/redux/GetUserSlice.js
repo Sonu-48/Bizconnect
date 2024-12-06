@@ -13,8 +13,8 @@ const getUser = createAsyncThunk("getUser", async (_, { rejectWithValue }) => {
         const res = await axios.get(Base_url.getUser, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + token,
-            }
+                Authorization: `Bearer ${token}`,
+              },
         });
         return res.data.data;
     } catch (error) {

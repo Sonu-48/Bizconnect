@@ -1,4 +1,4 @@
-import firebase from '@react-native-firebase/app'; // This is the correct import for React Native
+import firebase from '@react-native-firebase/app';
 import '@react-native-firebase/database';
 import '@react-native-firebase/storage';
 
@@ -17,7 +17,7 @@ const firebaseConfig = {
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 } else {
-  firebase.app();  // Use the existing app
+  firebase.app();
 }
 
 export { firebase };

@@ -86,7 +86,7 @@ const OtpScreen = () => {
       <View style={{alignItems: 'center', justifyContent: 'center', flex: 1}}>
         <Text style={styles.header}>Enter OTP</Text>
 
-        <View style={styles.inputContainer}>
+        <View style={styles.otpWrapper}>
           <Text style={styles.subHeader}>
             Enter OTP for email verification :
           </Text>
@@ -107,7 +107,7 @@ const OtpScreen = () => {
               />
             ))}
           </View>
-          <TouchableOpacity style={styles.btn} onPress={handleVerifyOtp}>
+          <TouchableOpacity style={[styles.btn,{margin:'auto',marginTop:20}]} onPress={handleVerifyOtp}>
             <Text style={styles.btntext}>Verify OTP</Text>
           </TouchableOpacity>
         </View>

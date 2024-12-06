@@ -1,5 +1,5 @@
-import {useEffect, useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   Image,
   ImageBackground,
@@ -12,26 +12,60 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import styles from './styles/Styles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import axios from 'axios';
-import {Base_url} from '../ApiUrl';
-import {useDispatch, useSelector} from 'react-redux';
-import {getUserdata} from '../redux/UserDataSlice';
+import { Base_url } from '../ApiUrl';
+import { useDispatch, useSelector } from 'react-redux';
+import { getUserdata } from '../redux/UserDataSlice';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const [profileImage, setProfileImage] = useState(null);
-  const {user} = useSelector(state => state.user);
+  const [name, setName] = useState('User Name');  // Set initial fallback name
+  const [profilePic, setProfilePic] = useState('');
+  const user = useSelector(state => state.user);  // Get user data from Redux
   const dispatch = useDispatch();
 
-  console.log('userData', user.profile_pic);
+  console.log('userData', user.user);
+  console.log("userdata", user.user);
 
+  // Fetch user data on mount
   useEffect(() => {
     dispatch(getUserdata());
   }, [dispatch]);
 
+  // Fetch name and profile pic, and set fallback for name if not present
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const storedName = await AsyncStorage.getItem('name');
+        const storedProfilePic = await AsyncStorage.getItem('profile_pic');
+
+        // Use stored values if available
+        if (storedName) {
+          setName(storedName);
+        }
+
+        if (storedProfilePic) {
+          setProfilePic(storedProfilePic);
+        } else if (user && (user.user.profile_pic || user.user.business_name || user.user.full_name)) {
+          setProfilePic(user.user.profile_pic);
+
+          // Set name based on priority: business_name > full_name > default
+          const userName = user.user.business_name?.trim() || user.user.full_name?.trim() || 'User Name';
+          setName(userName);
+        }
+      } catch (error) {
+        console.error('Error fetching user data from AsyncStorage:', error);
+      }
+    };
+
+    fetchUserData();
+  }, [dispatch, user]);
+
+  // Logout functionality
   const logouthandle = async () => {
     try {
       Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
@@ -66,6 +100,7 @@ const ProfileScreen = () => {
     }
   };
 
+  // Handle profile image change (Camera or Gallery)
   const handleEditProfileImage = () => {
     Alert.alert(
       'Select Profile Picture',
@@ -96,10 +131,11 @@ const ProfileScreen = () => {
           style: 'cancel',
         },
       ],
-      {cancelable: true},
+      { cancelable: true },
     );
   };
 
+  // Upload Profile Image to Server
   const uploadProfileImage = async image => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -133,7 +169,7 @@ const ProfileScreen = () => {
             : `https://bizconnect.a1professionals.net/storage/uploads/profile_pic/${imageUrl}`
           : null;
 
-        setProfileImage({uri: fullImageUrl});
+        setProfileImage({ uri: fullImageUrl });
         dispatch(getUserdata());
         Alert.alert('Success', 'Profile image updated successfully');
       } else {
@@ -161,14 +197,14 @@ const ProfileScreen = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <MaterialIcons name="arrow-back-ios-new" size={25} color="#ffff" />
           </TouchableOpacity>
-          <View style={{alignItems: 'center'}}>
+          <View style={{ alignItems: 'center' }}>
             <Text style={styles.h3}>Profile</Text>
-            <View style={{position: 'relative'}}>
+            <View style={{ position: 'relative' }}>
               <Image
                 source={
-                  user.profile_pic
-                    ? {uri: user.profile_pic}
-                    : require('../assets/user2.png')
+                  profilePic
+                    ? { uri: profilePic }
+                    : require('../assets/user2.png') // Default image if no profile pic
                 }
                 style={{
                   width: 120,
@@ -184,13 +220,14 @@ const ProfileScreen = () => {
                 <Icon name="camera" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.h3}>{user.business_name || 'User Name'}</Text>
+            {/* Display user's name or fallback to 'User Name' */}
+            <Text style={styles.h3}>{name || 'User Name'}</Text>
           </View>
         </View>
       </ImageBackground>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
-          <View style={{marginTop: 40}}>
+          <View style={{ marginTop: 40 }}>
             <TouchableOpacity
               style={{
                 flexDirection: 'row',
@@ -200,9 +237,9 @@ const ProfileScreen = () => {
                 alignItems: 'center',
               }}
               onPress={() => navigation.navigate('Setting')}>
-              <View style={{alignItems: 'center', flexDirection: 'row'}}>
+              <View style={{ alignItems: 'center', flexDirection: 'row' }}>
                 <Image source={require('../assets/settings.png')} />
-                <Text style={[styles.h3, {color: '#000000', marginLeft: 10}]}>
+                <Text style={[styles.h3, { color: '#000000', marginLeft: 10 }]}>
                   Settings
                 </Text>
               </View>
@@ -224,9 +261,9 @@ const ProfileScreen = () => {
                 marginTop: 20,
               }}
               onPress={() => navigation.navigate('Tickets')}>
-              <View style={{alignItems: 'center', flexDirection: 'row'}}>
+              <View style={{ alignItems: 'center', flexDirection: 'row' }}>
                 <Image source={require('../assets/support.png')} />
-                <Text style={[styles.h3, {color: '#000000', marginLeft: 10}]}>
+                <Text style={[styles.h3, { color: '#000000', marginLeft: 10 }]}>
                   Support
                 </Text>
               </View>
@@ -248,10 +285,10 @@ const ProfileScreen = () => {
                 marginTop: 20,
               }}
               onPress={logouthandle}>
-              <View style={{alignItems: 'center', flexDirection: 'row'}}>
+              <View style={{ alignItems: 'center', flexDirection: 'row' }}>
                 <Image source={require('../assets/logout.png')} />
-                <Text style={[styles.h3, {color: '#000000', marginLeft: 10}]}>
-                  Log Out
+                <Text style={[styles.h3, { color: '#000000', marginLeft: 10 }]}>
+                  Logout
                 </Text>
               </View>
             </TouchableOpacity>
