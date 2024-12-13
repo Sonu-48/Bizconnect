@@ -16,7 +16,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getUser} from '../redux/GetUserSlice';
 
-const defaultImage = require('../assets/user-image.png');
+// const defaultImage = require('../assets/user-image.png');
 
 const ChatInbox = () => {
   const navigation = useNavigation();
@@ -77,8 +77,6 @@ const ChatInbox = () => {
       setLoading(false);
     }
   };
-
-  // Effect hook to dispatch getUser and initialize filtered users on first render
   useEffect(() => {
     dispatch(getUser());
   }, [dispatch]);

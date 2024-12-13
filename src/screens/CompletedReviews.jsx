@@ -32,18 +32,19 @@ const renderReviews = ({ item }) => {
 };
 
 const CompletedReviews = () => {
-  const { review, loading } = useSelector(state => state.review);
+  const { review = [], loading } = useSelector(state => state.review); // Default to empty array
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(getReview());
   }, [dispatch]);
 
+  // Filter out completed reviews safely
   const CompletedReviews = useMemo(() => {
-    return review.filter(item => item.status === 'Completed');
+    return Array.isArray(review) ? review.filter(item => item.status === 'Completed') : [];
   }, [review]);
 
-//  loader
+  // Loader while fetching
   if (loading) {
     return (
       <View style={styles.loadingContainer}>

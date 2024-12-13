@@ -180,7 +180,7 @@ const ChatScreen = () => {
   };
 
   // Handle sending image
-  const handleSendImage = async (assets) => {
+  const handleSendImage = async assets => {
     const newMessage = {
       senderId: currentUserId,
       receiverId: receiverId,
@@ -251,11 +251,16 @@ const ChatScreen = () => {
   const renderChatMessage = ({item}) => {
     return (
       <TouchableOpacity
-        style={[styles.chatBubble, item.senderId === currentUserId ? styles.senderBubble : styles.receiverBubble]}
-        onLongPress={() => setSelectedMessage(item)}
-      >
+        style={[
+          styles.chatBubble,
+          item.senderId === currentUserId
+            ? styles.senderBubble
+            : styles.receiverBubble,
+        ]}
+        onLongPress={() => setSelectedMessage(item)}>
         {item.audioUri ? (
-          <TouchableOpacity onPress={() => audioRecorderPlayer.startPlayer(item.audioUri)}>
+          <TouchableOpacity
+            onPress={() => audioRecorderPlayer.startPlayer(item.audioUri)}>
             <Text style={styles.chatText}>Audio Message</Text>
           </TouchableOpacity>
         ) : item.imageUri ? (
@@ -264,7 +269,9 @@ const ChatScreen = () => {
           <Text style={styles.chatText}>{item.message}</Text>
         )}
         {selectedMessage?.id === item.id && (
-          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteMessage}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteMessage}>
             <Ionicons name="trash-outline" size={24} color="white" />
           </TouchableOpacity>
         )}
@@ -322,12 +329,18 @@ const ChatScreen = () => {
             {inputMessage.trim() ? (
               <Ionicons name="send" size={25} color="#007AFF" />
             ) : (
-              <Image source={require('../assets/microphone.png')} style={{width: 25}} />
+              <Image
+                source={require('../assets/microphone.png')}
+                style={{width: 25}}
+              />
             )}
           </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={openGallery}>
-          <Image source={require('../assets/add-icon.png')} style={{width: 25}} />
+          <Image
+            source={require('../assets/add-icon.png')}
+            style={{width: 25}}
+          />
         </TouchableOpacity>
       </View>
     </View>

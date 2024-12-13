@@ -2,6 +2,7 @@ import {
   Alert,
   BackHandler,
   Image,
+  Linking,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -26,6 +27,14 @@ const HomePage = () => {
       }
     });
   }, []);
+
+  // handleWebchat link
+  const handleWebchat = () => {
+    const url = 'https://bizconnect.a1professionals.net';
+    Linking.openURL(url).catch(err =>
+      console.error('Failed to open URL:', err),
+    );
+  };
 
   // Exit function from Home
   const isFocused = useIsFocused();
@@ -83,7 +92,7 @@ const HomePage = () => {
               <Text style={[styles.h5, {marginTop: 10}]}>Reviews</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={{flex: 1}}>
+          <TouchableOpacity style={{flex: 1}} onPress={handleWebchat}>
             <LinearGradient
               colors={['#00008B', '#ADD8E6']}
               style={styles.linearGradient}>
@@ -161,7 +170,9 @@ const HomePage = () => {
               <Text style={[styles.h5, {marginTop: 10}]}>Invoices</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={{flex: 1}} onPress={()=>navigation.navigate('Insights')}>
+          <TouchableOpacity
+            style={{flex: 1}}
+            onPress={() => navigation.navigate('Insights')}>
             <LinearGradient
               colors={['#00008B', '#ADD8E6']}
               style={styles.linearGradient}>

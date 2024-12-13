@@ -1,15 +1,15 @@
-import React, {useEffect, useMemo} from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Text,
   View,
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import {useDispatch, useSelector} from 'react-redux';
-import {getReview} from '../redux/GetReviewSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { getReview } from '../redux/GetReviewSlice';
 import styles from './styles/Styles';
 
-const renderReviews = ({item}) => {
+const renderReviews = ({ item }) => {
   return (
     <>
       {item?.status === 'Pending' && (
@@ -35,19 +35,23 @@ const renderReviews = ({item}) => {
     </>
   );
 };
+
 const PendingReview = () => {
-  const {review, loading} = useSelector(state => state.review);
+  // Default review to an empty array if it's undefined
+  const { review = [], loading } = useSelector(state => state.review);
+  console.log("review",review);
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(getReview());
   }, [dispatch]);
 
+  // Ensure review is an array before filtering
   const pendingReview = useMemo(() => {
-    return review.filter(item => item.status === 'Pending');
+    return Array.isArray(review) ? review.filter(item => item.status === 'Pending') : [];
   }, [review]);
 
-  //  loader
+  // Loader
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
