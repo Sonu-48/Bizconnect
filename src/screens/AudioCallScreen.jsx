@@ -1,122 +1,89 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, PermissionsAndroid, Platform } from 'react-native';
-import { TwilioVideo } from 'react-native-twilio-video-webrtc';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Base_url } from '../ApiUrl';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
+import { ZegoUIKitPrebuiltCall, ONE_ON_ONE_AUDIO_CALL_CONFIG, ONE_ON_ONE_VOICE_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn';
+import { ZegoConfig } from './utils/Keys';
 
 const AudioCallScreen = ({ route, navigation }) => {
-  const [roomName, setRoomName] = useState(null);
-  const [token, setToken] = useState(null);
-  const videoRef = useRef(null);
+  const [identity, setIdentity] = useState(null);
+  const [otherIdentity, setOtherIdentity] = useState(null);
+  const [userName, setUserName] = useState(null);
+  const [isInRoom, setIsInRoom] = useState(false);
 
-  const { identity, otherIdentity } = route.params;
-  const room = `${identity}-${otherIdentity}`;
+  const { appID, appSign } = ZegoConfig;
 
-  // Fetch Twilio token from your API
-  const getTwilioToken = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.log('No token found in AsyncStorage');
-        return null;
-      }
-
-      const res = await axios.post(`${Base_url.twiliotoken}`, {
-        identity: identity,
-        room_name: room,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.data.success === true) {
-        console.log('Twilio token retrieved successfully');
-        return res.data.token;
-      } else {
-        console.log('Error: Twilio token generation failed');
-        return null;
-      }
-    } catch (error) {
-      console.log('Error fetching Twilio token:', error);
-      return null;
-    }
+  // Function to generate a unique call ID
+  const generateCallID = (identity, otherIdentity) => {
+    const ids = [identity, otherIdentity];
+    ids.sort();
+    return ids.join('-');
   };
 
-  // Request microphone permissions (camera permission is not necessary for audio call)
-  const requestPermissions = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
-        ]);
-        if (granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('Microphone permission granted');
-        } else {
-          console.log('Microphone permission denied');
-        }
-      } catch (err) {
-        console.log(error);
-        console.warn(err);
-      }
-    }
-  };
+  // Generate callID if both identities are available
+  const callID = identity && otherIdentity ? generateCallID(identity, otherIdentity) : null;
 
+  // useEffect hook to initialize parameters from route
   useEffect(() => {
-    const fetchToken = async () => {
-      await requestPermissions();
-      const fetchedToken = await getTwilioToken();
-      if (fetchedToken) {
-        setToken(fetchedToken);
-        setRoomName(room);
+    if (route.params) {
+      const { identity, otherIdentity, userName } = route.params;
+      if (identity && otherIdentity && userName) {
+        setIdentity(identity);
+        console.log("userID", identity);
+        setOtherIdentity(otherIdentity);
+        setUserName(userName);
+      } else {
+        console.error('Route params are missing values.');
       }
-    };
-    fetchToken();
-  }, [identity, otherIdentity]);
-
-  const handleEndCall = () => {
-    if (videoRef.current) {
-      videoRef.current.disconnect();
+    } else {
+      console.error('Route params are undefined.');
     }
-    navigation.goBack();
+  }, [route.params]);
+
+  // Callback functions
+  const handleOnCallEnd = (callID, reason, duration) => {
+    console.log('Call ended:', reason);
+    navigation.navigate('Chat');
   };
+
+  const handleOnError = (error) => {
+    console.error('Zego error:', error);
+  };
+
+  const handleRoomJoinStatus = (status) => {
+    if (status) {
+      setIsInRoom(true);
+      console.log('User successfully joined the room.');
+    } else {
+      setIsInRoom(false);
+      console.log('User has not joined the room yet.');
+    }
+  };
+
+  // Loading state until parameters are available
+  if (!identity || !otherIdentity || !userName) {
+    return <View style={styles.container}><Text>Loading...</Text></View>;
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Audio Call</Text>
-      {token && roomName ? (
-        <>
-          <TwilioVideo
-            ref={videoRef}
-            token={token}
-            roomName={roomName}
-            audioOnly={true}
-            onRoomDidConnect={() => console.log('Connected to room')}
-            onRoomDidFailToConnect={(error) => console.log('Failed to connect to room:', error)}
-            onRoomDidDisconnect={(error) => console.log('Room disconnected:', error)}
-            onParticipantAddedAudioTrack={(participant, track) => {
-              console.log('New audio track added:', track);
-            }}
-            onParticipantRemovedAudioTrack={(participant, track) => {
-              console.log('Audio track removed:', track);
-            }}
-            onParticipantConnected={(participant) => {
-              console.log('Participant connected:', participant.identity);
-            }}
-            onParticipantDisconnected={(participant) => {
-              console.log('Participant disconnected:', participant.identity);
-            }}
-          />
-        </>
-      ) : (
-        <Text>Loading...</Text>
+      {callID && (
+        <ZegoUIKitPrebuiltCall
+          appID={appID}
+          appSign={appSign}
+          userID={identity}
+          userName={userName}
+          callID={callID}
+          config={{
+            ...ONE_ON_ONE_VOICE_CALL_CONFIG,
+            onCallEnd: handleOnCallEnd,
+            onError: handleOnError,
+            onJoinRoom: () => handleRoomJoinStatus(true),
+            onLeaveRoom: () => handleRoomJoinStatus(false),
+            audioOnly: true,
+            isCameraOn: false,
+            isMicrophoneOn: true,
+          }}
+        />
       )}
-
-      <TouchableOpacity style={styles.endCallButton} onPress={handleEndCall}>
-        <Ionicons name="call" size={30} color="red" />
-      </TouchableOpacity>
     </View>
   );
 };
@@ -124,22 +91,9 @@ const AudioCallScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  endCallButton: {
-    position: 'absolute',
-    bottom: 40,
-    backgroundColor: 'white',
-    borderRadius: 50,
-    padding: 10,
-    elevation: 5,
+    justifyContent: 'center',
+    zIndex: 0,
   },
 });
 

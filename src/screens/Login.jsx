@@ -134,8 +134,6 @@ const Login = () => {
   
         const name = userInfo.data.user.name;
         const profile_pic = userInfo.data.user.photo;
-  
-        // Only store non-null, non-undefined values in AsyncStorage
         if (profile_pic) {
           await AsyncStorage.setItem('profile_pic', profile_pic);
         } else {

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn';
+import { ZegoConfig } from './utils/Keys';
 
 const VideoCallScreen = ({ route, navigation }) => {
   const [identity, setIdentity] = useState(null);
   const [otherIdentity, setOtherIdentity] = useState(null);
   const [userName, setUserName] = useState(null);
   const [isInRoom, setIsInRoom] = useState(false);
+
+  const { appID, appSign } = ZegoConfig;
 
   // Function to generate a unique call ID
   const generateCallID = (identity, otherIdentity) => {
@@ -61,8 +64,8 @@ const VideoCallScreen = ({ route, navigation }) => {
     <View style={styles.container}>
       {callID && (
         <ZegoUIKitPrebuiltCall
-          appID={116186411}
-          appSign="a5a27f3365e76214f4f253147732b1489d423f420f70a4ffcf1e5bd90e1dcdcf"
+          appID={appID}
+          appSign={appSign}
           userID={identity}
           userName={userName}
           callID={callID}

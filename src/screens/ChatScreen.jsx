@@ -389,7 +389,7 @@ const ChatScreen = () => {
           <Text style={styles.headerText}>{userName}</Text>
         </View>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <TouchableOpacity style={{marginRight: 30}} onPress={()=>navigation.navigate('AudioCallScreen',{identity:currentUserId,otherIdentity:receiverId})}>
+          <TouchableOpacity style={{marginRight: 30}} onPress={()=>navigation.navigate('AudioCallScreen',{identity:currentUserId,otherIdentity:receiverId,userName:userName})}>
             <Ionicons name="call-outline" size={30} color="white" />
           </TouchableOpacity>
           <TouchableOpacity style={{marginRight: 15}} onPress={()=>navigation.navigate('VideoCallScreen',{identity:currentUserId,otherIdentity:receiverId,userName:userName})}>
